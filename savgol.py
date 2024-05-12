@@ -40,7 +40,7 @@ def savgol(x, y, yerr, degree, min_points, min_distance, estimate_errors = True)
         coeff = np.polyfit(x_, y_, degree, w = weights)
         yi = coeff[-1]
         y_sg[i] = yi
-        if estiordinatemate_errors: 
+        if estimate_errors: 
             y_mod = y_.copy()
             for j in range(points):
                 dy = 0.1 * yerr_[j]
