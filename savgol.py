@@ -60,7 +60,10 @@ def savgol2(x, y, yerr, degree, min_points, min_distance, estimate_errors = True
                 y_mod[j] = y_[j]
                 df_dy = (coeff_pos[-1] - coeff_neg[-1]) / dy
                 yerr_sg[i] = np.hypot(yerr_sg[i], df_dy * yerr_[j])
-    return (x, y_sg, yerr_sg)
+    res = y - y_sg
+    reserr = np.hypot(yerr, yerr_sg)
+    chi2 = np.var(res / reserr)
+    return (x, y_sg, yerr_sg, chi2)
 
 
 
@@ -74,12 +77,15 @@ y += yerr * np.random.randn(N)
 pylab.errorbar(x, y, yerr, fmt = 'o', zorder = 1)
 #x_sg, y_sg = savgol(x, y, yerr, 2, 10)
 #pylab.scatter(x_sg, y_sg, color = 'red', zorder = 2)
-x_sg2, y_sg2, yerr_sg2 = savgol2(x, y, yerr, 4, 5, 0.0)
+x_sg2, y_sg2, yerr_sg2, chi2 = savgol2(x, y, yerr, 2, 5, 2.0)
+print(chi2)
 #pylab.errorbar(x_sg2, y_sg2, yerr_sg2, fmt='.', color = 'green', zorder = 3)
 pylab.plot(x_sg2, y_sg2-yerr_sg2, 'r-', linewidth = 1.5)
 pylab.plot(x_sg2, y_sg2+yerr_sg2, 'r-', linewidth = 1.5)
 pylab.plot(x_sg2, y_sg2, 'r-', linewidth = 2.5)
 pylab.show()
+
+
 
 
 
