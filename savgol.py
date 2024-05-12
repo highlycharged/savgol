@@ -1,34 +1,25 @@
+## savgol.py 
+## A variant of the Savitzky-Golay filter algorithm for arbitrarily spaced data points.
+
 import numpy as np
-import pylab
 
 
-def polyfit(x, y, yerr, degree):
-    x0 = np.mean(x)
-    weights = 1.0 / yerr
-    coeff = np.polyfit(x - x0, y, degree, w = weights)
-    y0 = coeff[-1]
-    return (x0, y0)
+def savgol(x, y, yerr, degree, min_points, min_distance, estimate_errors = True):
+    """A variant of the Savitzky-Golay fiter algorithm for arbitrarily spaced data points.
 
+    Args:
+      x: abscissas of data points
+      y: ordinates of data points
+      yerr: 1-sigma uncertainties of ordinates of data points
+      degree: degree of locally fitted polynomials
+      min_points: minimum number of data points within each filter window
+      min_distance: at least one data point shall be at least this far away in x within each filter window
+      estimate_errors: if True, perform error propagation
 
-def savgol(x, y, yerr, degree, points):
-    indices = np.argsort(x)
-    x_ = x[indices]
-    y_ = y[indices]
-    yerr_ = yerr[indices]
-    N = len(x)
-    K = N - points
-    x_sg = np.ndarray(K)
-    y_sg = np.ndarray(K)
-    for i in range(K):
-        i_begin = i
-        i_end = i_begin + points
-        x0, y0 = polyfit(x_[i_begin:i_end], y_[i_begin:i_end], yerr_[i_begin:i_end], degree)
-        x_sg[i] = x0
-        y_sg[i] = y0
-    return (x_sg, y_sg)
-        
-
-def savgol2(x, y, yerr, degree, min_points, min_distance, estimate_errors = True):
+    Returns:
+      A tuple (x, y_filtered, yerr_filtered, chi2) with filtered abscissas (identical to input abscissas), fitered ordinates, corresponding 1-sigma uncertainties, and a chi-squared value.
+      The chi-squared value can serve as an indicator for the quality of the filtering. A value close to 1.0 can be considered optimal.
+    """
     N = len(x)
     y_sg = np.ndarray(N)
     yerr_sg = np.zeros_like(y_sg)
@@ -49,7 +40,7 @@ def savgol2(x, y, yerr, degree, min_points, min_distance, estimate_errors = True
         coeff = np.polyfit(x_, y_, degree, w = weights)
         yi = coeff[-1]
         y_sg[i] = yi
-        if estimate_errors: 
+        if estiordinatemate_errors: 
             y_mod = y_.copy()
             for j in range(points):
                 dy = 0.1 * yerr_[j]
@@ -63,27 +54,11 @@ def savgol2(x, y, yerr, degree, min_points, min_distance, estimate_errors = True
     res = y - y_sg
     reserr = np.hypot(yerr, yerr_sg)
     chi2 = np.var(res / reserr)
-    return (x, y_sg, yerr_sg, chi2)
+    return (x.copy(), y_sg, yerr_sg, chi2)
 
 
 
 
-N = 200
-x = N * np.random.rand(N)
-x.sort()
-y = (0.5 * x / N) + np.sin(10.0 * x / N)
-yerr = (np.ones_like(y) * 0.02) + (np.random.rand(N) * 0.1)
-y += yerr * np.random.randn(N)
-pylab.errorbar(x, y, yerr, fmt = 'o', zorder = 1)
-#x_sg, y_sg = savgol(x, y, yerr, 2, 10)
-#pylab.scatter(x_sg, y_sg, color = 'red', zorder = 2)
-x_sg2, y_sg2, yerr_sg2, chi2 = savgol2(x, y, yerr, 2, 5, 2.0)
-print(chi2)
-#pylab.errorbar(x_sg2, y_sg2, yerr_sg2, fmt='.', color = 'green', zorder = 3)
-pylab.plot(x_sg2, y_sg2-yerr_sg2, 'r-', linewidth = 1.5)
-pylab.plot(x_sg2, y_sg2+yerr_sg2, 'r-', linewidth = 1.5)
-pylab.plot(x_sg2, y_sg2, 'r-', linewidth = 2.5)
-pylab.show()
 
 
 
